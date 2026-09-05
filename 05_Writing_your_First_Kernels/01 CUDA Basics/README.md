@@ -1,106 +1,84 @@
-# CUDA Basics
+# CUDA 基础概念
 
-## Lets print out some stats about your GPU
+## 打印 GPU 硬件配置信息
 ![](../assets/gpustats.png)
 
+## 基础术语
+- **主机端 (Host)** ⇒ CPU ⇒ 使用主板上的物理内存条（RAM / DRAM）
+- **设备端 (Device)** ⇒ GPU ⇒ 使用显卡板载的独立显存（VRAM）
 
-## Easy stuff
-Host ⇒ CPU ⇒ Uses RAM sticks on the motherboard
+CUDA 程序的宏观执行流程：
+1. 将输入数据从主机端（CPU 内存）拷贝到设备端（GPU 显存）
+2. 在 GPU 上加载并并发执行核函数，直接操作显存中的数据
+3. 将计算结果从设备端拷贝回主机端，以便后续展示或进一步处理
 
-Device ⇒ GPU ⇒ Uses on Chip VRAM (video memory for desktop PCs)
+## 主机端与设备端命名约定
+- `h_A`：表示位于**主机端（Host / CPU）**的变量 “A”
+- `d_A`：表示位于**设备端（Device / GPU）**的变量 “A”
 
-CUDA program surface level runtime:
+## 函数执行空间限定符
+- `__global__`：声明一个核函数（Kernel）。在全局可见，由 CPU（主机端）发起调用，但在 GPU（设备端）上并发执行。核函数通常返回 `void`，其计算结果通常直接写入作为指针传入的输出显存缓冲区。例如矩阵乘法 $A \times B$，我们将预先分配好的显存缓冲区指针 $C$ 传入核函数，并在核函数中将计算结果写回 $C$。
+- `__device__`：声明一个设备函数。只能由 GPU 上的其他 `__global__` 或 `__device__` 函数调用，并在 GPU 上执行。例如，当你在 `__global__` 核函数中计算注意力机制的分数矩阵时，需要对矩阵进行标量掩码（Masking）或 Softmax，此时可以提取出一个专用的 `__device__` 函数来处理单元素计算，类似于普通编程中调用子函数。
+- `__host__`：普通主机函数，只在 CPU 上编译和执行。如果不写限定符，默认就是 `__host__`。`__host__` 和 `__device__` 可以组合使用，让同一函数同时编译出 CPU 与 GPU 两个版本。
 
-1. copy input from host to device
-2. load GPU program and execute using the transferred on-device data
-3. copy results from device back to host so you can display/use it somehow
+## 显存管理核心 API
 
-## Device VS Host naming scheme
-`h_A` refers to host (CPU) for variable name “A”
+- `cudaMalloc`：仅在 GPU 显存（全局内存 / Global Memory）中分配空间：
 
-`d_A` refers to device (GPU) for variable name “A” 
+```cpp
+float *d_a, *d_b, *d_c;
 
-`__global__` is visible globally, meaning the CPU or  *host* can call these global functions. these don’t typically return anything but just do really fast operations to a variable you pass in. for example, I could multiply matrix A and B together, but I need to pass in a matrix of the needed size as C and change the values in C to the outputs of A * B matmul. these are your cuda kernels 
-
-`__device__` is a very cool function I haven’t dived into yet but this is the small job that only the GPU can call. GPT-4 really liked my example of having a raw attention score matrix living on the `__global__` gpu cuda kernel and it needs to apply a scalar mask. instead of also doing this in the cuda kernel, we can have a `__device__` function defined in another .cu file or just exist as a function in the same file that does this SIMD scalar masking on any matrix we give it. this is the cuda equivalent of calling a function in a library instead of writing the function in your `main.py` file
-
-`__host__` is only going to run on CPU. same as running a regular c/c++ script on CPU without cuda.
-
-## Memory Management
-
-- `cudaMalloc` memory allocation on VRAM only (also called global memory)
-
-```
-    float *d_a, *d_b, *d_c;
-
-    cudaMalloc(&d_a, N*N*sizeof(float));
-    cudaMalloc(&d_b, N*N*sizeof(float));
-    cudaMalloc(&d_c, N*N*sizeof(float));
+cudaMalloc(&d_a, N * N * sizeof(float));
+cudaMalloc(&d_b, N * N * sizeof(float));
+cudaMalloc(&d_c, N * N * sizeof(float));
 ```
 
-- `cudaMemcpy` can copy from device to host, host to device, or device to device (edge cases)
-    - host to device ⇒ CPU to GPU
-    - device to host ⇒ GPU to CPU
-    - device to device ⇒ GPU location to different GPU location
-    - **`cudaMemcpyHostToDevice`**, **`cudaMemcpyDeviceToHost`**, or **`cudaMemcpyDeviceToDevice`**
-- `cudaFree` will free memory on the device
+- `cudaMemcpy`：在内存空间之间传输数据：
+  - 主机端到设备端 ⇒ CPU 到 GPU (`cudaMemcpyHostToDevice`)
+  - 设备端到主机端 ⇒ GPU 到 CPU (`cudaMemcpyDeviceToHost`)
+  - 设备端到设备端 ⇒ GPU 显存不同地址之间 (`cudaMemcpyDeviceToDevice`)
+- `cudaFree`：释放由 `cudaMalloc` 分配的 GPU 显存
 
-# `nvcc` compiler
-- Host code
-    - modifed to run kernels
-    - compiled to x86 binary
+# `nvcc` 编译器工作机制
+- **主机端代码**：经由编译器分离并编译为标准的 x86/ARM 主机机器码。
+- **设备端代码**：编译为 PTX（并行线程执行，Parallel Thread Execution）虚拟汇编指令集。
+- PTX 在不同的 GPU 微架构世代间保持向后兼容。
+- **JIT（即时编译）**：驱动程序在运行时可将通用的 PTX 编译为目标 GPU 原生的机器码（SASS），确保跨代向前兼容。
 
-- Device code
-    - compiled to PTX (parallel thread execution)
+## CUDA 组织层级 (CUDA Hierarchy)
+1. 核函数（Kernel）由具体的**线程 (Thread)** 并发执行
+2. 多个线程组织为**线程块 (Thread Block，简称 Block)**
+3. 多个线程块组织为一个**网格 (Grid)**
+4. 启动一个核函数，即启动了一个由多个 Block 组成的 Grid
 
-    - stable across multiple GPU generations
+### 4 个核心内置变量：
+- `gridDim` ⇒ 网格的尺寸（包含的 Block 数量）
+- `blockIdx` ⇒ 当前 Block 在网格中的三维索引坐标
+- `blockDim` ⇒ 线程块的尺寸（每个 Block 中包含的 Thread 数量）
+- `threadIdx` ⇒ 当前 Thread 在所属 Block 中的三维索引坐标
 
-- JIT (just-in-time)
+## 线程 (Threads)
+- 每个线程拥有自己私有的局部内存与寄存器（Registers）。
+- 示例：若要计算向量加法 $a = [1, 2, 3, \dots, N]$ 与 $b = [2, 4, 6, \dots, N]$，每个线程独立计算单个元素：线程 0 计算 $a[0] + b[0]$，线程 1 计算 $a[1] + b[1]$，依此类推。
 
-    - PTX into native GPU instructions
-
-    - allows for forward compatibility
-
-## CUDA Hierarchy?
-1. Kernel executes in a thread
-2. Threads grouped into Thread Blocks (aka Blocks)
-3. Blocks grouped into a Grid
-4. Kernel executed as a Grid of Blocks of Threads
-
-### 4 technical terms:
-- `gridDim` ⇒ number of blocks in the grid
-- `blockIdx` ⇒ index of the block in the grid
-- `blockDim` ⇒ number of threads in a block
-- `threadIdx` ⇒ index of the thread in the block
-
-(more on this in video lectures)
-
-## Threads
-- each thread has local memory (registers) and is private to the thread
-- if want to add `a = [1, 2, 3, ... N]` and `b = [2, 4, 6, ... N]` each thread would do a single add ⇒ `a[0] + b[0]` (thread 1); `a[1] + b[1]` (thread 2); etc...
-
-## Warps
+## 线程束 (Warps)
 ![](../assets/weft.png)
-- https://en.wikipedia.org/wiki/Warp_and_weft
-- The warp is the set of [yarns](https://en.wikipedia.org/wiki/Yarn) or other things stretched in place on a [loom](https://en.wikipedia.org/wiki/Loom) before the weft is introduced during the weaving process. It is regarded as the *longitudinal* set in a finished fabric with two or more sets of elements.
-- Each warp is inside of a block and parallelizes 32 threads
-- Instructions are issued to warps that then tell the threads what to do (not directly sent to threads)
-- There is no way of getting around using warps
-- Warp scheduler makes the warps run
-- 4 warp schedulers per SM
+- [Warp 与 Weft 纺织术语维基](https://en.wikipedia.org/wiki/Warp_and_weft)：经线（Warp）是在织布机上平行张紧的基准纱线。
+- 在 CUDA 中，**Warp（线程束）** 是 SM 调度和执行的基本硬件单元，固定由 **32 个连续线程** 组成。
+- GPU 的指令是按 Warp 为单位发射的，同一个 Warp 内的 32 个线程以锁步（Lock-step / SIMT）方式执行相同的指令。
+- 硬件底层调度必然围绕 Warp 展开，无法绕过。
+- 每个 SM 通常拥有 4 个独立的 Warp 调度器（Warp Schedulers）。
 ![](../assets/schedulers.png)
 
-## Blocks
-- each block has shared memory (visible to all threads in thread block)
-- execute the same code on different data, shared memory space, more efficient memory reads and writes since coordination is better
+## 线程块 (Blocks)
+- 每个 Block 内部拥有一块高速的**共享内存 (Shared Memory)**，同一 Block 内的所有线程均可读写该共享内存。
+- 同一 Block 内的线程可以执行高效的数据协同与线程同步（`__syncthreads()`）。
 
-## Grids
-- during kernel execution, the threads within the blocks within the grid can access global memory (VRAM)
-- contain a bunch of blocks. best example is grids handle batch processing, where each block in the grid is a batch element
+## 网格 (Grids)
+- 核函数执行期间，Grid 内所有 Block 的所有线程均可访问底层的全局显存（Global Memory）。
+- Grid 包含大量 Block。最直观的例子是批处理（Batch Processing）：Grid 中的每个 Block 处理 Batch 中的一个独立样本。
 
-> why not just use only threads instead of blocks and threads? add to this given our knowledge of how warps group and execute a batch of 32 threads in lockstep
-> Logically, this shared memory is partitioned among the blocks. This means that a thread can communicate with the other threads in its block via the shared memory chunk. 
+> **为什么需要 Block 和 Thread 两级组织，而不能只有单一层次的 Thread？**  
+> 因为硬件中由 SM 独立调度 Block，且 Block 内部共享高速 Shared Memory。Block 之间的执行完全解耦，没有固定的先后依赖关系——Block 0 和 Block 1 可能同时被执行，也可能是 Block 3 和 Block 0 先被调度。这种无序性正是 CUDA 能够随着 GPU 核心数增加实现线性扩展（Scalability）的根本所在。每个 Block 就像拼图中的一块，彼此独立解题，最终拼装出完整结果。
 
-- CUDA parallelism is scalable because there aren’t sequential block run-time dependencies.What I mean here is that you may not run Block 0 & Block 1, then Block 2 & 3… It may be Block 3 & 0, then Block 6 & 1. This means each of these mini “jobs” are solving a subset of the problem independent of the others. Like one piece of the puzzle. As long as all the pieces are assembled in the right place at the end, it works!
-
-> [How do threads map onto CUDA cores?](https://stackoverflow.com/questions/10460742/how-do-cuda-blocks-warps-threads-map-onto-cuda-cores)
+> 推荐阅读：[CUDA 线程、线程束与线程块如何映射到硬件核心？](https://stackoverflow.com/questions/10460742/how-do-cuda-blocks-warps-threads-map-onto-cuda-cores)

@@ -1,81 +1,83 @@
-# CUDA Course
+# CUDA 课程
 
-GitHub Repo for CUDA Course on FreeCodeCamp
+FreeCodeCamp 上的 CUDA 课程官方 GitHub 仓库
 
-> Note: This course is designed for Ubuntu Linux. Windows users can use Windows Subsystem for Linux or Docker containers to simulate the ubuntu Linux environment.
+> 注意：本课程专为 Ubuntu Linux 设计。Windows 用户可以使用 WSL（Windows Subsystem for Linux）或 Docker 容器来模拟 Ubuntu Linux 环境。
 
-## Table of Contents
+## 目录
 
-1. [The Deep Learning Ecosystem](01_Deep_Learning_Ecosystem/README.md)
-2. [Setup/Installation](02_Setup/README.md)
-3. [C/C++ Review](03_C_and_C++_Review/README.md)
-4. [Gentle Intro to GPUs](04_Gentle_Intro_to_GPUs/README.md)
-5. [Writing Your First Kernels](05_Writing_your_First_Kernels/README.md)
-6. [CUDA APIs (cuBLAS, cuDNN, etc)](06_CUDA_APIs/README.md)
-7. [Optimizing Matrix Multiplication](07_Faster_Matmul/README.md)
+1. [深度学习生态系统](01_Deep_Learning_Ecosystem/README.md)
+2. [环境配置与安装](02_Setup/README.md)
+3. [C/C++ 复习](03_C_and_C++_Review/README.md)
+4. [GPU 浅显入门](04_Gentle_Intro_to_GPUs/README.md)
+5. [编写你的第一个核函数](05_Writing_your_First_Kernels/README.md)
+6. [CUDA API (cuBLAS, cuDNN 等)](06_CUDA_APIs/README.md)
+7. [矩阵乘法优化](07_Faster_Matmul/README.md)
 8. [Triton](08_Triton/README.md)
-9. [PyTorch Extensions (CUDA)](08_PyTorch_Extensions/README.md)
-10. [Final Project](09_Final_Project/README.md)
-11. [Extras](10_Extras/README.md)
+9. [PyTorch 扩展 (CUDA)](09_PyTorch_Extensions/README.md)
+10. [结课项目](10_Final_Project/README.md)
+11. [附加内容](11_Extras/README.md)
 
-## Course Philosophy
+## 课程理念
 
-This course aims to:
+本课程旨在：
 
-- Lower the barrier to entry for HPC jobs
-- Provide a foundation for understanding projects like Karpathy's [llm.c](https://github.com/karpathy/llm.c)
-- Consolidate scattered CUDA programming resources into a comprehensive, organized course
+- 降低进入高性能计算（HPC）领域的门槛
+- 为理解像 Karpathy 的 [llm.c](https://github.com/karpathy/llm.c) 这样的项目奠定基础
+- 将零散的 CUDA 编程资源整合为一套全面、结构清晰的课程
 
-## Overview
+## 课程概述
 
-- Focus on GPU kernel optimization for performance improvement
-- Cover CUDA, PyTorch, and Triton
-- Emphasis on technical details of writing faster kernels
-- Tailored for NVIDIA GPUs
-- Culminates in a simple MLP MNIST project in CUDA
+- 聚焦于通过 GPU 核函数优化来提升性能
+- 涵盖 CUDA、PyTorch 和 Triton
+- 强调编写更高效核函数的技术细节
+- 专为 NVIDIA GPU 量身定制
+- 以 CUDA 实现的简易 MNIST 多层感知机（MLP）项目作为结课成果
 
-## Prerequisites
+## 前置知识
 
-- Python programming (required)
-- Basic differentiation and vector calculus for backprop (recommended)
-- Linear algebra fundamentals (recommended)
+- Python 编程（必备）
+- 反向传播所需的基础微分与向量微积分（推荐）
+- 线性代数基础（推荐）
 
-## Key Takeaways
+## 核心收获
 
-- Optimizing existing implementations
-- Building CUDA kernels for cutting-edge research
-- Understanding GPU performance bottlenecks, especially memory bandwidth
+- 优化现有的算子实现
+- 为前沿研究构建自定义 CUDA 核函数
+- 深入理解 GPU 性能瓶颈，尤其是内存带宽限制
 
-## Hardware Requirements
+## 硬件要求
 
-- Any NVIDIA GTX, RTX, or datacenter level GPU
-- Cloud GPU options available for those without local hardware
+- 任意 NVIDIA GTX、RTX 或数据中心级别 GPU
+- 无本地硬件的用户可选用云端 GPU
 
-## Use Cases for CUDA/GPU Programming
+## CUDA / GPU 编程的应用场景
 
-- Deep Learning (primary focus of this course)
-- Graphics and Ray-tracing
-- Fluid Simulation
-- Video Editing
-- Crypto Mining
-- 3D modeling
-- Anything that requires parallel processing with large arrays
+- 深度学习（本课程的核心重点）
+- 计算机图形学与光线追踪
+- 流体模拟
+- 视频编辑
+- 加密货币计算
+- 3D 建模
+- 任何需要针对大型数组进行并行处理的场景
 
-## Resources
+## 参考资源
 
-- GitHub repo (this repository)
+- GitHub 仓库（即本仓库）
 - Stack Overflow
-- NVIDIA Developer Forums
-- NVIDIA and PyTorch documentation
-- LLMs for navigating the space
-- Cheatsheet [here](/11_Extras/assets/cheatsheet.md)
-## Other Learning Material
+- NVIDIA 开发者论坛
+- NVIDIA 与 PyTorch 官方文档
+- 辅助探索与答疑的大语言模型（LLM）
+- 速查表见 [此处](/11_Extras/assets/cheatsheet.md)
+
+## 其他学习资料
 
 - https://github.com/CoffeeBeforeArch/cuda_programming
 - https://www.youtube.com/@GPUMODE
 - https://discord.com/invite/gpumode
 
-## Fun YouTube Videos:
+## 推荐 YouTube 视频
+
 - [How do GPUs works? Exploring GPU Architecture](https://www.youtube.com/watch?v=h9Z4oGN89MU)
 - [But how do GPUs actually work?](https://www.youtube.com/watch?v=58jtf24uijw&ab_channel=Graphicode)
 - [Getting Started With CUDA for Python Programmers](https://www.youtube.com/watch?v=nOxKexn3iBo&ab_channel=JeremyHoward)
@@ -93,7 +95,7 @@ This course aims to:
 - [Intro to CUDA (part 1): High Level Concepts](https://www.youtube.com/watch?v=4APkMJdiudU&ab_channel=JoshHolloway)
 - [Intro to GPU Hardware](https://www.youtube.com/watch?v=kUqkOAU84bA&ab_channel=TomNurkkala)
 
-## Find me
+## 联系作者
 
 - [Twitter/X](https://x.com/elliotarledge)
 - [LinkedIn](https://www.linkedin.com/in/elliot-arledge-a392b7243/)

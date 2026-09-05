@@ -1,17 +1,13 @@
-# CUTLASS
+# CUTLASS 深度解析
 
-- [CUDA Templates for Linear Algebra Subroutines and Solvers ⇒ cutlass & ‣](https://developer.nvidia.com/blog/cutlass-linear-algebra-cuda/)
+- 官方博客介绍：[CUDA 线性代数子程序与求解器模板库 (CUTLASS)](https://developer.nvidia.com/blog/cutlass-linear-algebra-cuda/)
+- CUTLASS 最广泛的应用场景是通用矩阵乘法（GEMM）。在 Transformer 架构中，矩阵乘法是算力消耗的核心，因此 `cutlass/gemm` 模块尤为关键。
+- CUTLASS 依赖大量的 C++ 高级模板元编程，具有较高的复杂度与学习门槛。它专为高性能计算（HPC）工程师设计，用于针对特定的硬件架构（如 Tensor Core、异步数据搬运指令 TMA 等）实现极致的定制与微架构算子融合。
+- 在示例测试脚本中，对 $1024 \times 1024 \times 1024$ 规模的矩阵乘法在 cuBLAS 与 CUTLASS 之间进行了对比（先执行 10 次预热，再统计实际耗时）：
 
-- Most commonly used for Matrix multiplication since its the heart of the transformer architecture so we care about `cutlass/gemm`
-- you likely won’t ever use cutlass just because of the overarching complexity. cutlass is designed for kernel engineers to fine-tune and optimize around specific hardware architectures whilst requiring deep GPU kernel knowledge.
-- in the comparison script below, I compare the time taken for matrix multiplication on cuBLAS vs CUTLASS. we use 1024x1024x1024 matrices, warmup cuBLAS with 10 matmuls then record time, then do the same for CUTLASS.
-- This is performance difference (not super massive but we will happily take the ~10% boost w/ cuBLAS)
-    
 ```bash
-cuBLAS Time: 0.202861 ms
-CUTLASS Time: 0.227451 ms
+cuBLAS 耗时: 0.202861 ms
+CUTLASS 耗时: 0.227451 ms
 ```
 
-- you have you pass in the path for cutlass during compilation with `-I` flag. consider writing a seperate path for cutlass in your `~/.bashrc` or `~/.zshrc` file for ease of use
-
-
+- **编译说明**：使用 CUTLASS 时，需要通过 `-I` 标志指定 CUTLASS 头文件所在路径。建议在 `~/.bashrc` 或 `~/.zshrc` 中导出相应环境变量以便日常编译。

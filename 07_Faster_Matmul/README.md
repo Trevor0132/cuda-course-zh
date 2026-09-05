@@ -1,78 +1,88 @@
-# Lets Optimize Matrix Multiplication
+# 矩阵乘法性能优化指南 (Optimizing Matmul)
 
 ![](assets/comparison.png)
 
-> Naive (easiest to understand but poor performance)
-> Coalesced Memory Access (ensuring we load data in a way that is optimal for the GPU)
-> Shared Memory (reducing the number of global memory accesses increases memory bandwidth)
-> 1D/2D Blocktiling (splitting the work equally amongst all SMs / blocks in the grid)
-> Vectorized Memory Access (loading more data per instruction (128 bit instead of 32 bit))
-> Autotuning (grid search for the most optimal parameters for your kernel based on the your GPU architecture)
-> cuBLAS (NVIDIA's closed source library for linear algebra operations like Matmul)
+> - **Naive（朴素实现）**：最直观易懂，但性能极差。
+> - **Coalesced Memory Access（合并访存）**：确保访存模式契合 GPU 硬件吞吐特性。
+> - **Shared Memory（共享内存缓存）**：大幅减少对高延迟全局内存的访问，提升有效内存带宽。
+> - **1D/2D Blocktiling（线程块分块）**：在网格中的所有 SM / 线程块之间均衡分配计算负载。
+> - **Vectorized Memory Access（向量化内存访问）**：利用 `float4` 等向量指令，单条指令搬运 128 位数据而不是 32 位。
+> - **Autotuning（自动调优）**：针对特定的 GPU 微架构网格搜索最优的分块参数。
+> - **cuBLAS**：NVIDIA 官方闭源线性代数加速库（工业级性能基准）。
 
-**I was too lazy to write this so lets jump over to Simon Boehm's [blog](https://siboehm.com/articles/22/CUDA-MMM) & [git repo](https://github.com/siboehm/SGEMM_CUDA)**
+**本模块参考了 Simon Boehm 的经典深度博文：[博客文章](https://siboehm.com/articles/22/CUDA-MMM) 与 [GitHub 仓库](https://github.com/siboehm/SGEMM_CUDA)**
 
-## Row Major vs Column Major
+---
 
-- cuBLAS expects matrices to be in column major format so we have to transpose beforehand
-- Row Major: `A[i][j]` is stored in `A[i * N + j]`
-- Column Major: `A[i][j]` is stored in `A[j * M + i]`
+## 行优先 (Row-Major) vs 列优先 (Column-Major)
+
+- cuBLAS 默认假定矩阵以列优先（Column-Major）格式排布，因此通常需要提前进行转置或合理调整步长。
+- **行优先**：元素 `A[i][j]` 存储在一维偏移量 `A[i * N + j]`
+- **列优先**：元素 `A[i][j]` 存储在一维偏移量 `A[j * M + i]`
 
 ```python
-# Row Major
+# 行优先 (Row-Major)
 A = [[1, 2, 3],
      [4, 5, 6],
      [7, 8, 9]]
 
-# how its stored in memory
+# 内存中的实际物理扁平排布
 A = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-# Column Major
+# 列优先 (Column-Major)
 A = [[1, 4, 7],
      [2, 5, 8],
      [3, 6, 9]]
 
-# how its stored in memory
+# 内存中的实际物理扁平排布
 A = [1, 4, 7, 2, 5, 8, 3, 6, 9]
 ```
 
-## Purpose of `pragma #unroll`
+---
 
-- ideally, you'd want more useful compute per iteration. if you can do 4 math operations inside of 1 per iteration thats good.
-- in some contexts, the compiler will actually will actually unroll the loop without explicitly telling it to do so. (this is what happened with `unrolling.cu`)
-- you can check the PTX assembly code with `nvcc -ptx v1.cu -o - | less` to see if the compiler has unrolled the loop.
-- by writing a kernel without unrolling and benchmarking it with a kernel that has unrolling, you can see if the unrolling
-  is actually beneficial. then check the PTX assembly code to see if the compiler has unrolled the loop. only beneficial if you aren't getting the benefits you wanted and need to investigate further.
-- the quickly benchmark, just take the average time of the kernel and compare it to the unrolled version. if the unrolled version is faster, then the unrolling was beneficial. if not, then the unrolling was not beneficial. always make sure to verify results so your kernel is outputting what is should (compare element-wise)
+## `#pragma unroll` 循环展开的作用
 
-## What is occupancy
+- 目标：在每个循环迭代内部包含更多实质性的计算，减少循环计数器自增、边界条件比较及跳转带来的额外开销。
+- 在很多情况下，现代 `nvcc` 编译器会在特定启发式规则下自动展开小循环，即使你没有显式添加 `#pragma unroll`。
+- 可以使用命令查看生成的 PTX 汇编代码确认循环是否被成功展开：
+  ```bash
+  nvcc -ptx v1.cu -o - | less
+  ```
+- **基准测试与对比**：编写未展开与展开版本的核函数，通过计时对比二者的平均耗时，验证展开是否切实带来了性能收益。同时务必进行数值正确性校验（逐元素校验）。
 
-    Occupancy is defined as the ratio between the number of active warps per SM and the maximum possible number of active warps per SM.
+---
 
-    There are three main limits to keeping more active blocks loaded on an SM: register count, warp count and SMEM capacity. Let’s do an example calculation for our current kernel.
+## 什么是 GPU 占用率 (Occupancy)？
 
-    https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#occupancy
+> **占用率（Occupancy）** 定义为每个流式多处理器（SM）上当前活跃的线程束（Active Warps）数量与该 SM 理论最大支持活跃线程束数量的比值。
 
-> [Matmul Performance](https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html)
+限制单个 SM 驻留更多活跃 Block 的三大主要硬件瓶颈包括：
+1. **寄存器数量（Register Count）**
+2. **活跃线程束总数（Warp Count）**
+3. **共享内存容量（Shared Memory Capacity）**
 
-## Assembly Instructions:
+官方指南：[CUDA C 最佳实践指南：Occupancy 分析](https://docs.nvidia.com/cuda/cuda-c-best-practices-guide/index.html#occupancy)  
+性能调优参考：[深度学习矩阵乘法性能指南](https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html)
 
-- [PTX Instructions (Parallel Thread Execution)](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#ptx-machine-model)
-- [How to read Shader Assembly (SASS)](https://interplayoflight.wordpress.com/2021/04/18/how-to-read-shader-assembly/)
+---
 
-### Why might we want to dig into OR write assembly code?
+## 汇编指令深入 (Assembly)
 
-- allows us to understand the operations we are bound by (ex: warp divergence, waiting for data to arrive in registers, time expensive operations, etc)
-- allows for clock-cycle optimization (closest to the bare metal you can get)
+- [PTX 指令集参考 (Parallel Thread Execution)](https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#ptx-machine-model)
+- [如何阅读 GPU 着色器汇编代码 (SASS)](https://interplayoflight.wordpress.com/2021/04/18/how-to-read-shader-assembly/)
 
-## Inspired by:
+### 为什么需要探究或编写汇编级代码？
+- 深入洞察当前的性能瓶颈所在（例如：线程束分化 Warp Divergence、等待数据加载至寄存器的延迟停顿、高开销指令等）。
+- 进行时钟周期级别的微调（最贴近硬件物理极限的优化手段）。
 
-1. [Simon Boehm @ Anthropic](https://siboehm.com/articles/22/CUDA-MMM)
-2. [Lei Mao @ NVIDIA](https://github.com/leimao/CUDA-GEMM-Optimization)
+## 致敬与灵感来源
 
-## Take it a step further:
+1. [Simon Boehm (Anthropic 研究员)](https://siboehm.com/articles/22/CUDA-MMM)
+2. [Lei Mao (NVIDIA 专家)](https://github.com/leimao/CUDA-GEMM-Optimization)
 
-- To understand the kernel performance optimizations that companies like NVIDIA apply to the **matmul** in order to achieve high TFLOP counts seen in cuBLAS, check out cuTLASS (CUDA Templates for Linear Algebra Subroutines):
-- [CUTLASS Github](https://github.com/NVIDIA/cutlass)
-- [CUTLASS Blog](https://developer.nvidia.com/blog/cutlass-linear-algebra-cuda/)
-- [CUTLASS Documentation](https://nvidia.github.io/cutlass/)
+## 进阶探索
+
+想要进一步理解顶尖工业界（如 NVIDIA cuBLAS）如何实现峰值 TFLOPS 的矩阵乘法，请学习 CUTLASS：
+- [CUTLASS GitHub 仓库](https://github.com/NVIDIA/cutlass)
+- [CUTLASS 官方技术博客](https://developer.nvidia.com/blog/cutlass-linear-algebra-cuda/)
+- [CUTLASS 官方文档](https://nvidia.github.io/cutlass/)

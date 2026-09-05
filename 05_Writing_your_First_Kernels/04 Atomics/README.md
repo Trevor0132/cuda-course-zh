@@ -1,39 +1,43 @@
-# What are Atomic Operations
-    
-by “atomic” we are referring to the indivisibility concept in physics where a thing cannot be broken down further.
+# 什么是原子操作 (Atomic Operations)
 
-An **atomic operation** ensures that a particular operation on a memory location is completed entirely by one thread before another thread can access or modify the same memory location. This prevents race conditions.
+“原子（Atomic）”在物理学中原意代表不可再被分割的基本粒子。在计算机并行计算中，**原子操作**表示某一个操作是不可分割、互不干扰且一气呵成的。
 
-Since we limit the amount of work done on a single piece of memory per unit time throughout an atomic operation, we lose slightly to speed. It is hardware guaranteed to be memory safe at a cost of speed.
+**原子操作**能够确保对某个内存地址的操作由单个线程完全独立执行完毕之后，其他线程才被允许访问或修改该相同的内存地址。这彻底杜绝了多线程并发读写时的竞争条件（Race Condition）。
 
-### **Integer Atomic Operations**
+因为原子操作在微观上序列化了针对同一内存地址的访问，限制了单位时间内对该显存位置的并行吞吐，所以会在一定程度上带来延迟开销。它是**以少许性能为代价，换取硬件级别的内存数据安全性与一致性**。
 
-- **`atomicAdd(int* address, int val)`**: Atomically adds `val` to the value at `address` and returns the old value.
-- **`atomicSub(int* address, int val)`**: Atomically subtracts `val` from the value at `address` and returns the old value.
-- **`atomicExch(int* address, int val)`**: Atomically exchanges the value at `address` with `val` and returns the old value.
-- **`atomicMax(int* address, int val)`**: Atomically sets the value at `address` to the maximum of the current value and `val`.
-- **`atomicMin(int* address, int val)`**: Atomically sets the value at `address` to the minimum of the current value and `val`.
-- **`atomicAnd(int* address, int val)`**: Atomically performs a bitwise AND of the value at `address` and `val`.
-- **`atomicOr(int* address, int val)`**: Atomically performs a bitwise OR of the value at `address` and `val`.
-- **`atomicXor(int* address, int val)`**: Atomically performs a bitwise XOR of the value at `address` and `val`.
-- **`atomicCAS(int* address, int compare, int val)`**: Atomically compares the value at `address` with `compare`, and if they are equal, replaces it with `val`. The original value is returned.
+### **整型原子操作 API**
 
-### **Floating-Point Atomic Operations**
+- **`atomicAdd(int* address, int val)`**：原子地将 `val` 加到 `address` 指向的值上，并返回修改前的旧值。
+- **`atomicSub(int* address, int val)`**：原子地从 `address` 指向的值中减去 `val`，并返回旧值。
+- **`atomicExch(int* address, int val)`**：原子地将 `address` 处的值替换为 `val`，并返回旧值。
+- **`atomicMax(int* address, int val)`**：原子地将 `address` 处的值设为当前值与 `val` 的较大者。
+- **`atomicMin(int* address, int val)`**：原子地将 `address` 处的值设为当前值与 `val` 的较小者。
+- **`atomicAnd(int* address, int val)`**：原子地在 `address` 处执行按位与（Bitwise AND）。
+- **`atomicOr(int* address, int val)`**：原子地在 `address` 处执行按位或（Bitwise OR）。
+- **`atomicXor(int* address, int val)`**：原子地在 `address` 处执行按位异或（Bitwise XOR）。
+- **`atomicCAS(int* address, int compare, int val)`**：比较并交换（Compare-And-Swap）。原子地比较 `address` 处的值是否等于 `compare`；若相等，则将其替换为 `val`。无论是否替换，始终返回 `address` 处的原始值。
 
-- **`atomicAdd(float* address, float val)`**: Atomically adds `val` to the value at `address` and returns the old value. Available from CUDA 2.0.
-- Note: Floating-point atomic operations on double precision variables are supported starting from CUDA Compute Capability 6.0 using `atomicAdd(double* address, double val)`.
+### **浮点型原子操作 API**
 
-### From Scratch
+- **`atomicAdd(float* address, float val)`**：单精度浮点数原子加法，从 CUDA 2.0 起支持。
+- **注**：双精度浮点数（`double`）原子加法 `atomicAdd(double* address, double val)` 从 Compute Capability 6.0（Pascal 架构）起获得原生硬件支持。
 
-Modern GPUs have special hardware instructions to perform these operations efficiently. They use techniques like Compare-and-Swap (CAS) at the hardware level.
+---
 
-You can think of atomics as a very fast, hardware-level mutex operation. It's as if each atomic operation does this:
+### 从零理解原子操作的底层逻辑
 
-1. lock(memory_location)
-2. old_value = *memory_location
-3. *memory_location = old_value + increment
-4. unlock(memory_location)
-5. return old_value
+现代 GPU 拥有专用的硬件指令来高效执行原子操作。它们在硬件电路层级广泛运用了 CAS（Compare-And-Swap）机制。
+
+你可以将原子操作视作硬件级别极度高效的轻量级互斥锁（Mutex）。每个原子操作在概念上等价于以下执行序列：
+
+1. `lock(memory_location)`：对该内存地址加锁
+2. `old_value = *memory_location`：读取旧值
+3. `*memory_location = old_value + increment`：写入新值
+4. `unlock(memory_location)`：释放锁
+5. `return old_value`：返回旧值
+
+软件层面上利用 `atomicCAS` 模拟原子加法的原理示例：
 
 ```cpp
 __device__ int softwareAtomicAdd(int* address, int increment) {
@@ -43,61 +47,60 @@ __device__ int softwareAtomicAdd(int* address, int increment) {
     if (threadIdx.x == 0) lock = 0;
     __syncthreads();
     
-    while (atomicCAS(&lock, 0, 1) != 0);  // Acquire lock
+    // 自旋等待获取锁
+    while (atomicCAS(&lock, 0, 1) != 0);
     
     old = *address;
     *address = old + increment;
     
-    __threadfence();  // Ensure the write is visible to other threads
+    __threadfence();  // 确保写入对其他线程立即可见
     
-    atomicExch(&lock, 0);  // Release lock
+    atomicExch(&lock, 0);  // 释放锁
     
     return old;
 }
 ```
 
+- 互斥（Mutual Exclusion）推荐视频：https://www.youtube.com/watch?v=MqnpIwN7dz0
+  - “Mutual（互）”：指实体（线程/进程）之间的相互对等关系，规则平等约束所有参与方。
+  - “Exclusion（斥）”：指防止对临界资源的并发同时访问。
 
-- Mutual Exclusion ⇒ https://www.youtube.com/watch?v=MqnpIwN7dz0&t
-- "Mutual":
-    - Implies a reciprocal or shared relationship between entities (in this case, threads or processes).
-    - Suggests that the exclusion applies equally to all parties involved.
-- "Exclusion":
-    - Refers to the act of keeping something out or preventing access.
-    - In this context, it means preventing simultaneous access to a resource.
+---
 
+### GPU 互斥锁（Mutex）实战完整代码
 
 ```cpp
 #include <cuda_runtime.h>
 #include <stdio.h>
 
-// Our mutex structure
+// 自定义 Mutex 结构体
 struct Mutex {
     int *lock;
 };
 
-// Initialize the mutex
+// 在主机端初始化 Mutex
 __host__ void initMutex(Mutex *m) {
     cudaMalloc((void**)&m->lock, sizeof(int));
     int initial = 0;
     cudaMemcpy(m->lock, &initial, sizeof(int), cudaMemcpyHostToDevice);
 }
 
-// Acquire the mutex
+// 在设备端获取互斥锁（自旋锁）
 __device__ void lock(Mutex *m) {
     while (atomicCAS(m->lock, 0, 1) != 0) {
-        // Spin-wait
+        // 自旋等待
     }
 }
 
-// Release the mutex
+// 在设备端释放互斥锁
 __device__ void unlock(Mutex *m) {
     atomicExch(m->lock, 0);
 }
 
-// Kernel function to demonstrate mutex usage
+// 演示 Mutex 保护临界区的核函数
 __global__ void mutexKernel(int *counter, Mutex *m) {
     lock(m);
-    // Critical section
+    // 临界区（Critical Section）
     int old = *counter;
     *counter = old + 1;
     unlock(m);
@@ -112,13 +115,13 @@ int main() {
     int initial = 0;
     cudaMemcpy(d_counter, &initial, sizeof(int), cudaMemcpyHostToDevice);
     
-    // Launch kernel with multiple threads
+    // 启动包含 1000 个线程的核函数同时累加计数器
     mutexKernel<<<1, 1000>>>(d_counter, &m);
     
     int result;
     cudaMemcpy(&result, d_counter, sizeof(int), cudaMemcpyDeviceToHost);
     
-    printf("Counter value: %d\n", result);
+    printf("计数器最终结果: %d\n", result);
     
     cudaFree(m.lock);
     cudaFree(d_counter);

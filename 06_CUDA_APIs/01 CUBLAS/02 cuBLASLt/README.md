@@ -1,16 +1,17 @@
-# cuBLAS-Lt
+# cuBLASLt 矩阵乘法
 
-- when I was initally testing this, I was getting cublas errors because I was making the matrices smaller (so I could understand where incorrect results were coming from)
-- from [cublas-lt](https://docs.nvidia.com/cuda/cublas/#cublasltmatmul) docs, search for "Dimensions m and k must be multiples of 4."
-- this means we can't have a 3x4 or 2x4 matrix, but we can have a 4x4 or 4x8 matrix
+- 在最初测试 cuBLASLt 时，如果为了快速验证而把矩阵尺寸设置得很小，可能会遭遇报错。
+- 查阅 [cuBLASLt 文档](https://docs.nvidia.com/cuda/cublas/#cublasltmatmul) 可以发现关键约束：**“Dimensions m and k must be multiples of 4”**（维度 $m$ 和 $k$ 必须是 4 的整数倍）。
+- 这意味着不能使用 $3 \times 4$ 或 $2 \times 4$ 的矩阵，但可以使用 $4 \times 4$ 或 $4 \times 8$ 的矩阵。
 
-## Compilation Instructions
-- Compile the code using the `nvcc` compiler with the following command:
+## 编译与运行指南
+
+- 使用 `nvcc` 编译器进行编译，需显式链接 `cublasLt`、`cublas` 和 `cuda`：
   ```sh
   nvcc -o matmul main.cu -lcublasLt -lcublas -lcuda
   ```
-- Run the compiled executable:
+- 运行生成的可执行程序：
   ```sh
-   ./matmul
+  ./matmul
   ```
-  where main.cu is the name of the file
+  （其中 `main.cu` 为当前示例源码文件名）
