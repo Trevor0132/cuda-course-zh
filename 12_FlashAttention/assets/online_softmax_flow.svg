@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 480" width="100%" height="100%">
+  <defs>
+    <linearGradient id="gradBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="cardGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <linearGradient id="cardGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" />
+      <stop offset="100%" stop-color="#334155" />
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity="0.45" />
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38bdf8" />
+    </marker>
+  </defs>
+
+  <style>
+    .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 700; font-size: 22px; fill: #f8fafc; }
+    .subtitle { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 13px; fill: #94a3b8; }
+    .card-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-weight: 600; font-size: 15px; fill: #e2e8f0; }
+    .code { font-family: "JetBrains Mono", Consolas, Menlo, monospace; font-size: 13px; fill: #cbd5e1; }
+    .math { font-family: "JetBrains Mono", Consolas, "Times New Roman", serif; font-size: 13.5px; fill: #f1f5f9; }
+    .comment { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11.5px; fill: #94a3b8; }
+    .tag { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 11px; font-weight: bold; }
+  </style>
+
+  <!-- Background -->
+  <rect width="950" height="480" rx="16" fill="url(#gradBg)" stroke="#334155" stroke-width="1.5" />
+
+  <!-- Header -->
+  <text x="40" y="44" class="title">Online Softmax 在线动态归一化更新原理</text>
+  <text x="40" y="68" class="subtitle">无需先验遍历全局即可在 SRAM 中分块增量更新 Attention 权重与输出向量，保证数值稳定性</text>
+
+  <!-- Block 1: 传统三趟遍历瓶颈 (左) -->
+  <g transform="translate(40, 95)" filter="url(#shadow)">
+    <rect width="260" height="350" rx="12" fill="url(#cardGrad1)" stroke="#e11d48" stroke-width="1.5" />
+    <rect x="0" y="0" width="260" height="36" rx="12" fill="#e11d48" opacity="0.15" />
+    <text x="16" y="24" class="card-title" fill="#fda4af">传统 3-Pass Softmax 瓶颈</text>
+    <rect x="195" y="10" width="52" height="18" rx="4" fill="#e11d48" />
+    <text x="202" y="23" class="tag" fill="#ffffff">3 次访存</text>
+
+    <!-- Steps -->
+    <g transform="translate(16, 50)">
+      <circle cx="10" cy="12" r="10" fill="#f43f5e" />
+      <text x="7" y="16" font-family="sans-serif" font-size="11" font-weight="bold" fill="#fff">1</text>
+      <text x="28" y="16" class="math" font-weight="bold">Pass 1: 求最大值</text>
+      <text x="28" y="34" class="math" fill="#fb7185">m = max(x_1, ..., x_N)</text>
+      <text x="28" y="50" class="comment">从 HBM 读入全部数据，求最大值</text>
+    </g>
+
+    <g transform="translate(16, 125)">
+      <circle cx="10" cy="12" r="10" fill="#fb923c" />
+      <text x="7" y="16" font-family="sans-serif" font-size="11" font-weight="bold" fill="#fff">2</text>
+      <text x="28" y="16" class="math" font-weight="bold">Pass 2: 指数与配分和</text>
+      <text x="28" y="34" class="math" fill="#fdba74">d = Σ exp(x_i - m)</text>
+      <text x="28" y="50" class="comment">再次从 HBM 读入，累加求分母</text>
+    </g>
+
+    <g transform="translate(16, 200)">
+      <circle cx="10" cy="12" r="10" fill="#facc15" />
+      <text x="7" y="16" font-family="sans-serif" font-size="11" font-weight="bold" fill="#000">3</text>
+      <text x="28" y="16" class="math" font-weight="bold">Pass 3: 归一化输出</text>
+      <text x="28" y="34" class="math" fill="#fef08a">p_i = exp(x_i - m) / d</text>
+      <text x="28" y="50" class="comment">第三次遍历写回 HBM，IO 开销巨大</text>
+    </g>
+
+    <rect x="16" y="275" width="228" height="60" rx="8" fill="#0f172a" stroke="#475569" stroke-width="1" />
+    <text x="26" y="298" class="comment" fill="#f87171">⚠️ 致命痛点：</text>
+    <text x="26" y="316" class="comment" fill="#94a3b8">对于大序列 N×N，必须反复落盘 HBM，</text>
+    <text x="26" y="330" class="comment" fill="#94a3b8">显存带宽直接被打满（Memory Bound）</text>
+  </g>
+
+  <!-- Arrow Transition -->
+  <path d="M 315 265 L 345 265" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow)" />
+
+  <!-- Block 2: 动态合并与在线更新 (中右) -->
+  <g transform="translate(360, 95)" filter="url(#shadow)">
+    <rect width="550" height="350" rx="12" fill="url(#cardGrad2)" stroke="#38bdf8" stroke-width="1.5" />
+    <rect x="0" y="0" width="550" height="36" rx="12" fill="#0284c7" opacity="0.15" />
+    <text x="20" y="24" class="card-title" fill="#7dd3fc">Online Softmax 增量递推机制（仅单次遍历并在 SRAM 完成）</text>
+    <rect x="475" y="10" width="58" height="18" rx="4" fill="#0284c7" />
+    <text x="481" y="23" class="tag" fill="#ffffff">SRAM 驻留</text>
+
+    <!-- Formula 1: 最大值更新 -->
+    <g transform="translate(20, 52)">
+      <rect width="510" height="58" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="16" y="24" class="tag" fill="#38bdf8">1. 局部最大值更新 (Local Max Reduction)</text>
+      <text x="16" y="46" class="math" fill="#38bdf8">m_new = max(m_old, max(S_block))</text>
+      <text x="325" y="45" class="comment">保持指数计算不溢出</text>
+    </g>
+
+    <!-- Formula 2: 分母归一化项校准 -->
+    <g transform="translate(20, 120)">
+      <rect width="510" height="72" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
+      <text x="16" y="22" class="tag" fill="#a78bfa">2. 分母累加项校准与累加 (Denominator Rescaling)</text>
+      <text x="16" y="44" class="math" fill="#c084fc">d_new = d_old · exp(m_old - m_new) + Σ exp(S_block - m_new)</text>
+      <text x="16" y="62" class="comment" fill="#94a3b8">旧累积和乘上缩放系数修正历史偏置，加上当前分块的新贡献</text>
+    </g>
+
+    <!-- Formula 3: 输出向量增量更新 -->
+    <g transform="translate(20, 202)">
+      <rect width="510" height="134" rx="8" fill="#0f172a" stroke="#10b981" stroke-width="1.2" />
+      <text x="16" y="24" class="tag" fill="#34d399">3. 注意力输出累加向量更新 (Output Rescaling &amp; Accumulate)</text>
+      <text x="16" y="50" class="math" fill="#34d399">P_block = exp(S_block - m_new)</text>
+      <text x="16" y="74" class="math" fill="#6ee7b7">O_new = O_old · (d_old · exp(m_old - m_new) / d_new) + (P_block · V_block) / d_new</text>
+      
+      <line x1="16" y1="90" x2="495" y2="90" stroke="#1e293b" stroke-width="1" />
+      <text x="16" y="108" class="comment" fill="#f8fafc">✨ 核心红利 (FlashAttention-2 机制)：</text>
+      <text x="16" y="124" class="comment" fill="#94a3b8">外层遍历 Q、内层流式读取 K, V 分块时，O 向量全程驻留寄存器动态修正！</text>
+    </g>
+  </g>
+</svg>

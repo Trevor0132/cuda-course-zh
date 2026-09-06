@@ -17,6 +17,7 @@ FreeCodeCamp 上的 CUDA 课程官方 GitHub 仓库
 9. [PyTorch 扩展 (CUDA)](09_PyTorch_Extensions/README.md)
 10. [结课项目](10_Final_Project/README.md)
 11. [附加内容](11_Extras/README.md)
+12. [FlashAttention (闪电注意力机制)](12_FlashAttention/README.md)
 
 ## 课程理念
 

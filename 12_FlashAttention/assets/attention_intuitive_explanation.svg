@@ -1,0 +1,322 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 890" width="100%" height="100%">
+  <defs>
+    <!-- Background & Card Gradients -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#090d16" />
+    </linearGradient>
+    
+    <linearGradient id="qGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+
+    <linearGradient id="kGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#6d28d9" />
+    </linearGradient>
+
+    <linearGradient id="vGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+
+    <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+
+    <linearGradient id="outGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ec4899" />
+      <stop offset="100%" stop-color="#be185d" />
+    </linearGradient>
+
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1f293d" stop-opacity="0.8" />
+      <stop offset="100%" stop-color="#111827" stop-opacity="0.9" />
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+
+    <!-- Marker Arrow -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+    </marker>
+    <marker id="arrow-gold" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#fbbf24" />
+    </marker>
+  </defs>
+
+  <style>
+    .title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 800; font-size: 26px; fill: #f8fafc; }
+    .subtitle { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 14px; fill: #94a3b8; }
+    .section-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 700; font-size: 16px; fill: #38bdf8; }
+    .card-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 700; font-size: 15px; fill: #f1f5f9; }
+    .text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 12.5px; fill: #cbd5e1; }
+    .text-dim { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 11px; fill: #64748b; }
+    .code { font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 12.5px; font-weight: 600; }
+    .badge { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 11px; font-weight: 700; }
+  </style>
+
+  <!-- Deep Background -->
+  <rect width="1200" height="890" rx="16" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- Header Section -->
+  <g transform="translate(40, 42)">
+    <rect x="0" y="-6" width="8" height="42" rx="4" fill="#38bdf8" />
+    <text x="24" y="16" class="title">Attention (注意力机制) 通俗原理解析：Q、K、V 究竟在干什么？</text>
+    <text x="24" y="38" class="subtitle">核心逻辑：从图书检索日常类比 ➔ 单词上下文联系 ➔ 完整矩阵运算数据流图解</text>
+  </g>
+
+  <!-- ================= PART 1: 生活直观类比 (图书检索) ================= -->
+  <g transform="translate(40, 105)">
+    <!-- Container Box -->
+    <rect width="1120" height="235" rx="14" fill="url(#cardGrad)" stroke="#334155" stroke-width="1" filter="url(#shadow)" />
+    
+    <text x="25" y="30" class="section-title">💡 维度一：直观的生活场景类比（图书检索与精准提炼）</text>
+    <text x="25" y="52" class="text">注意力机制的本质就是一种【带权重的动态信息检索】系统，由 Query (查询)、Key (键值索引)、Value (信息内容) 三者协同完成：</text>
+
+    <!-- Query Card (x=25, w=240) -->
+    <g transform="translate(25, 72)">
+      <rect width="240" height="142" rx="10" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" />
+      <rect x="12" y="12" width="72" height="22" rx="6" fill="#3b82f6" fill-opacity="0.2" />
+      <text x="22" y="27" class="badge" fill="#60a5fa">Query (Q)</text>
+      <text x="92" y="28" class="card-title">“读者的检索目标”</text>
+      <text x="12" y="58" class="text" fill="#93c5fd">• 我现在正在关注哪个词？</text>
+      <text x="12" y="80" class="text">• 比如读到代词：<tspan fill="#facc15" font-weight="700">"it" (它)</tspan></text>
+      <text x="12" y="102" class="text-dim">发出检索意图：“谁是 it 指代的实体？”</text>
+      <text x="12" y="126" class="code" fill="#38bdf8">张量维度: (1, d)</text>
+    </g>
+
+    <!-- Arrow Q*K -->
+    <g transform="translate(268, 142)">
+      <path d="M 0 0 L 42 0" stroke="#60a5fa" stroke-width="2" marker-end="url(#arrow-blue)" />
+      <text x="21" y="-8" class="code" fill="#93c5fd" font-size="11px" text-anchor="middle">点积</text>
+    </g>
+
+    <!-- Key Card (x=315, w=240) -->
+    <g transform="translate(315, 72)">
+      <rect width="240" height="142" rx="10" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5" />
+      <rect x="12" y="12" width="62" height="22" rx="6" fill="#8b5cf6" fill-opacity="0.2" />
+      <text x="23" y="27" class="badge" fill="#c084fc">Key (K)</text>
+      <text x="82" y="28" class="card-title">“全书的书脊标签”</text>
+      <text x="12" y="58" class="text" fill="#d8b4fe">• 句子中各词的主题索引标签</text>
+      <text x="12" y="80" class="text">• 如: "animal"(动物), "street"(街)</text>
+      <text x="12" y="102" class="text-dim">与 Query 匹配：计算语义关联相似度</text>
+      <text x="12" y="126" class="code" fill="#c084fc">张量维度: (N, d)</text>
+    </g>
+
+    <!-- Arrow Softmax -->
+    <g transform="translate(560, 142)">
+      <path d="M 0 0 L 50 0" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow-gold)" />
+      <text x="25" y="-8" class="code" fill="#fcd34d" font-size="11px" text-anchor="middle">Softmax</text>
+    </g>
+
+    <!-- Attention Weights Card (x=618, w=225) -->
+    <g transform="translate(618, 72)">
+      <rect width="225" height="142" rx="10" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" />
+      <rect x="12" y="12" width="84" height="22" rx="6" fill="#f59e0b" fill-opacity="0.2" />
+      <text x="20" y="27" class="badge" fill="#fcd34d">Weights (P)</text>
+      <text x="104" y="28" class="card-title">“注意力百分比”</text>
+      
+      <!-- Progress Bar 1 -->
+      <text x="12" y="58" class="text">"animal": <tspan fill="#4ade80" font-weight="700">85%</tspan></text>
+      <rect x="88" y="48" width="122" height="12" rx="3" fill="#334155" />
+      <rect x="88" y="48" width="104" height="12" rx="3" fill="#22c55e" />
+
+      <!-- Progress Bar 2 -->
+      <text x="12" y="82" class="text">"street": <tspan fill="#94a3b8">8%</tspan></text>
+      <rect x="88" y="72" width="122" height="12" rx="3" fill="#334155" />
+      <rect x="88" y="72" width="10" height="12" rx="3" fill="#64748b" />
+
+      <!-- Progress Bar 3 -->
+      <text x="12" y="106" class="text">"tired": <tspan fill="#94a3b8">7%</tspan></text>
+      <rect x="88" y="96" width="122" height="12" rx="3" fill="#334155" />
+      <rect x="88" y="96" width="9" height="12" rx="3" fill="#64748b" />
+
+      <text x="12" y="128" class="text-dim">所有概率之和严格归一化为 1.0 (100%)</text>
+    </g>
+
+    <!-- Arrow V multiply -->
+    <g transform="translate(848, 142)">
+      <path d="M 0 0 L 32 0" stroke="#10b981" stroke-width="2" marker-end="url(#arrow)" />
+      <text x="16" y="-8" class="code" fill="#6ee7b7" font-size="11px" text-anchor="middle">加权</text>
+    </g>
+
+    <!-- Value & Output Card (x=885, w=220) -->
+    <g transform="translate(885, 72)">
+      <rect width="220" height="142" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+      <rect x="12" y="12" width="68" height="22" rx="6" fill="#10b981" fill-opacity="0.2" />
+      <text x="21" y="27" class="badge" fill="#34d399">Value (V)</text>
+      <text x="88" y="28" class="card-title">“书本真实内容”</text>
+      
+      <text x="12" y="58" class="text">• 包含词语最丰满的实体语义</text>
+      <text x="12" y="78" class="text" fill="#6ee7b7">按 P 的比例加权融合并输出：</text>
+      <rect x="10" y="88" width="200" height="38" rx="6" fill="#064e3b" stroke="#059669" stroke-width="1" />
+      <text x="16" y="112" class="text" fill="#a7f3d0" font-weight="600">Output: "it" 融合 85% <tspan fill="#facc15" font-weight="700">animal</tspan></text>
+    </g>
+  </g>
+
+  <!-- ================= PART 2: 矩阵计算流 (The Matrix Formula Flow) ================= -->
+  <g transform="translate(40, 360)">
+    <rect width="1120" height="495" rx="14" fill="url(#cardGrad)" stroke="#334155" stroke-width="1" filter="url(#shadow)" />
+    
+    <text x="25" y="30" class="section-title">⚡ 维度二：标准注意力矩阵计算流 (The Matrix Formula Flow)</text>
+    <text x="25" y="52" class="text">数学公式表达：Attention(Q, K, V) = softmax( Q · K^T / √d ) · V。让我们看它在底层矩阵乘法中如何真实流转：</text>
+
+    <!-- STEP 1: Q Matrix (w=150, h=195) -->
+    <g transform="translate(25, 72)">
+      <rect width="150" height="195" rx="8" fill="#1e293b" stroke="#3b82f6" stroke-width="2" />
+      <rect x="0" y="0" width="150" height="30" rx="8" fill="url(#qGrad)" />
+      <text x="75" y="20" class="card-title" text-anchor="middle" fill="#ffffff">Query (Q)</text>
+      
+      <!-- Token Rows -->
+      <g transform="translate(12, 42)">
+        <rect x="0" y="0" width="126" height="22" rx="4" fill="#0f172a" stroke="#334155" />
+        <text x="8" y="15" class="code" fill="#94a3b8">The</text>
+        <rect x="0" y="26" width="126" height="22" rx="4" fill="#0f172a" stroke="#334155" />
+        <text x="8" y="41" class="code" fill="#facc15">animal</text>
+        <rect x="0" y="52" width="126" height="22" rx="4" fill="#0f172a" stroke="#334155" />
+        <text x="8" y="67" class="code" fill="#94a3b8">didn't ...</text>
+        <rect x="0" y="78" width="126" height="24" rx="4" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1.5" />
+        <text x="8" y="95" class="code" fill="#ffffff" font-weight="700">it (重点行)</text>
+      </g>
+      <text x="75" y="180" class="code" fill="#60a5fa" text-anchor="middle">形状: (N × d)</text>
+    </g>
+
+    <!-- Matrix Multiply symbol -->
+    <text x="195" y="172" class="title" fill="#64748b">×</text>
+
+    <!-- STEP 2: K^T Matrix (w=195, h=195) -->
+    <g transform="translate(225, 72)">
+      <rect width="195" height="195" rx="8" fill="#1e293b" stroke="#8b5cf6" stroke-width="2" />
+      <rect x="0" y="0" width="195" height="30" rx="8" fill="url(#kGrad)" />
+      <text x="97" y="20" class="card-title" text-anchor="middle" fill="#ffffff">Key 转置 (K^T)</text>
+      
+      <g transform="translate(10, 42)">
+        <text x="12" y="16" class="code" fill="#94a3b8">The</text>
+        <text x="46" y="16" class="code" fill="#facc15">animal</text>
+        <text x="110" y="16" class="code" fill="#94a3b8">...</text>
+        <text x="142" y="16" class="code" fill="#94a3b8">it</text>
+        <line x1="5" y1="26" x2="170" y2="26" stroke="#475569" stroke-dasharray="3" />
+        <rect x="42" y="32" width="55" height="42" rx="4" fill="#4c1d95" stroke="#a78bfa" />
+        <text x="69" y="58" class="code" fill="#ffffff" text-anchor="middle">Col 2</text>
+      </g>
+      <text x="97" y="180" class="code" fill="#c084fc" text-anchor="middle">形状: (d × N)</text>
+    </g>
+
+    <!-- Equals symbol -->
+    <text x="442" y="172" class="title" fill="#64748b">=</text>
+
+    <!-- STEP 3: Attention Score Matrix S (The O(N^2) Monster) -->
+    <g transform="translate(470, 52)">
+      <rect width="225" height="235" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="2" filter="url(#glow)" />
+      <rect x="0" y="0" width="225" height="32" rx="8" fill="url(#scoreGrad)" />
+      <text x="112" y="21" class="card-title" text-anchor="middle" fill="#ffffff">中间矩阵 S = Q·K^T / √d</text>
+      
+      <!-- Attention Map Grid -->
+      <g transform="translate(18, 42)">
+        <text x="0" y="12" class="badge" fill="#fbbf24">⚠️ 显存爆炸之源 (N × N)</text>
+        <rect x="0" y="20" width="188" height="115" rx="6" fill="#0f172a" stroke="#475569" />
+        
+        <!-- Highlight Row "it" -->
+        <rect x="0" y="74" width="188" height="28" fill="#78350f" fill-opacity="0.6" stroke="#f59e0b" stroke-width="1.5" />
+        <text x="8" y="93" class="code" fill="#fbbf24">Row "it":</text>
+        
+        <!-- Cells -->
+        <rect x="80" y="77" width="38" height="22" rx="3" fill="#22c55e" />
+        <text x="99" y="92" class="code" fill="#ffffff" text-anchor="middle" font-size="11px">0.85</text>
+        
+        <rect x="124" y="77" width="26" height="22" rx="3" fill="#334155" />
+        <text x="137" y="92" class="code" fill="#94a3b8" text-anchor="middle" font-size="10px">.08</text>
+
+        <rect x="154" y="77" width="26" height="22" rx="3" fill="#334155" />
+        <text x="167" y="92" class="code" fill="#94a3b8" text-anchor="middle" font-size="10px">.07</text>
+      </g>
+      
+      <text x="112" y="216" class="code" fill="#fcd34d" text-anchor="middle">经过 Softmax 归一化为 P</text>
+    </g>
+
+    <!-- Multiply V symbol -->
+    <text x="715" y="172" class="title" fill="#64748b">×</text>
+
+    <!-- STEP 4: Value Matrix V (w=150, h=195) -->
+    <g transform="translate(745, 72)">
+      <rect width="150" height="195" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="2" />
+      <rect x="0" y="0" width="150" height="30" rx="8" fill="url(#vGrad)" />
+      <text x="75" y="20" class="card-title" text-anchor="middle" fill="#ffffff">Value (V)</text>
+      
+      <g transform="translate(12, 42)">
+        <rect x="0" y="0" width="126" height="22" rx="4" fill="#0f172a" stroke="#334155" />
+        <text x="8" y="15" class="code" fill="#94a3b8">The 信息</text>
+        <rect x="0" y="26" width="126" height="22" rx="4" fill="#064e3b" stroke="#10b981" stroke-width="1.5" />
+        <text x="8" y="41" class="code" fill="#a7f3d0" font-weight="700">animal 信息 ★</text>
+        <rect x="0" y="52" width="126" height="22" rx="4" fill="#0f172a" stroke="#334155" />
+        <text x="8" y="67" class="code" fill="#94a3b8">didn't 信息</text>
+        <rect x="0" y="78" width="126" height="22" rx="4" fill="#0f172a" stroke="#334155" />
+        <text x="8" y="93" class="code" fill="#94a3b8">it 初始信息</text>
+      </g>
+      <text x="75" y="180" class="code" fill="#34d399" text-anchor="middle">形状: (N × d)</text>
+    </g>
+
+    <!-- Equals symbol -->
+    <text x="915" y="172" class="title" fill="#64748b">=</text>
+
+    <!-- STEP 5: Output Matrix O (w=155, h=195) -->
+    <g transform="translate(945, 72)">
+      <rect width="155" height="195" rx="8" fill="#1e293b" stroke="#ec4899" stroke-width="2" />
+      <rect x="0" y="0" width="155" height="30" rx="8" fill="url(#outGrad)" />
+      <text x="77" y="20" class="card-title" text-anchor="middle" fill="#ffffff">输出 Output (O)</text>
+      
+      <g transform="translate(12, 42)">
+        <rect x="0" y="0" width="131" height="22" rx="4" fill="#0f172a" stroke="#334155" />
+        <text x="8" y="15" class="code" fill="#94a3b8">O[0]: The'</text>
+        <rect x="0" y="26" width="131" height="22" rx="4" fill="#0f172a" stroke="#334155" />
+        <text x="8" y="41" class="code" fill="#94a3b8">O[1]: animal'</text>
+        <rect x="0" y="52" width="131" height="22" rx="4" fill="#0f172a" stroke="#334155" />
+        <text x="8" y="67" class="code" fill="#94a3b8">O[2]: ...</text>
+        <rect x="0" y="78" width="131" height="24" rx="4" fill="#831843" stroke="#f472b6" stroke-width="1.5" />
+        <text x="8" y="95" class="code" fill="#fbcfe8" font-weight="700">O[it] 融合实体</text>
+      </g>
+      <text x="77" y="180" class="code" fill="#f472b6" text-anchor="middle">形状: (N × d)</text>
+    </g>
+
+    <!-- Bottom Deep Connection Banner -->
+    <g transform="translate(25, 305)">
+      <rect width="1070" height="165" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" />
+      <text x="22" y="28" class="card-title" fill="#38bdf8">🔗 为什么标准 Attention 会卡死？而 FlashAttention 能飞速运行？</text>
+      
+      <!-- Bullet 1 -->
+      <g transform="translate(22, 54)">
+        <text x="0" y="0" class="text" fill="#f1f5f9">
+          <tspan fill="#f87171" font-weight="700">• 标准 Attention 的悲剧</tspan>：看中间那个金色的 <tspan fill="#facc15" font-weight="700">S / P 矩阵 (N × N)</tspan>！当序列 N=4096 时它有 1600 万个浮点数，N=32768 时更高达 10 亿！
+        </text>
+        <text x="12" y="20" class="text" fill="#94a3b8">
+          标准实现必须把这庞大矩阵完整写入片外显存 (HBM)，再完整读回做 Softmax，显存带宽被彻底堵死，引发显存溢出 (OOM) 与漫长延迟。
+        </text>
+      </g>
+      
+      <!-- Bullet 2 -->
+      <g transform="translate(22, 108)">
+        <text x="0" y="0" class="text" fill="#f1f5f9">
+          <tspan fill="#4ade80" font-weight="700">• FlashAttention 的破局</tspan>：彻底<tspan fill="#ef4444" font-weight="700">抛弃在显存中物化完整的 N × N 矩阵</tspan>！将 Q、K、V 切成适合片上 SRAM 的小瓷砖（Tile），
+        </text>
+        <text x="12" y="20" class="text" fill="#94a3b8">
+          配合【在线 Softmax】数学增量递推，在 GPU 芯片内部边乘、边更新统计量、边累加输出 O，<tspan fill="#34d399" font-weight="700">中间注意力图从未离开过片上高速缓存</tspan>，显存直接节省 96.2%！
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

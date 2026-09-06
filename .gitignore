@@ -1,1 +1,6 @@
 09_PyTorch_Extensions/build
+build/
+*.so
+*.pyc
+__pycache__/
+*.egg-info/
