@@ -322,12 +322,12 @@ for (int j = 0; j < num_kv_blocks; ++j) {
 
 ## 7. 基准测试与精度验证 (Benchmark)
 
-在本项目根目录下提供了开箱即用的自动化测试与性能评测脚本：[`benchmark.py`](file:///mnt/g/260905cuda/cuda-course-zh/12_FlashAttention/benchmark.py)。
+在本项目根目录下提供了开箱即用的自动化测试与性能评测脚本：[`benchmark.py`](benchmark.py)。
 
 ### 运行方式
 
 ```bash
-cd /mnt/g/260905cuda/cuda-course-zh/12_FlashAttention
+cd 12_FlashAttention
 python3 benchmark.py
 ```
 
@@ -625,11 +625,11 @@ graph TD
 ## 13. 经典论文与深入学习资料
 
 ### 本地附带的核心论文
-- [`2022_FlashAttention_v1.pdf`](file:///mnt/g/260905cuda/cuda-course-zh/12_FlashAttention/papers/2022_FlashAttention_v1.pdf)
+- [`2022_FlashAttention_v1.pdf`](papers/2022_FlashAttention_v1.pdf)
   *Tri Dao, Daniel Y. Fu, Stefano Ermon, Atri Rudra, Christopher Ré.* **FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Complexity.** NeurIPS 2022.
-- [`2023_FlashAttention_v2.pdf`](file:///mnt/g/260905cuda/cuda-course-zh/12_FlashAttention/papers/2023_FlashAttention_v2.pdf)
+- [`2023_FlashAttention_v2.pdf`](papers/2023_FlashAttention_v2.pdf)
   *Tri Dao.* **FlashAttention-2: Faster Attention with Better Parallelism and Work Partitioning.** ICLR 2024.
-- [`2018_Online_Normalizer_Softmax.pdf`](file:///mnt/g/260905cuda/cuda-course-zh/12_FlashAttention/papers/2018_Online_Normalizer_Softmax.pdf)
+- [`2018_Online_Normalizer_Softmax.pdf`](papers/2018_Online_Normalizer_Softmax.pdf)
   *Maxim Milakov, Natalia Gimelshein.* **Online normalizer calculation for softmax.** NVIDIA, 2018.
 
 ### 推荐拓展阅读
